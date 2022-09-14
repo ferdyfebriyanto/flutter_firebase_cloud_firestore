@@ -42,4 +42,7 @@ Berikut ini adalah link untuk praktikum: [link](https://firebase.google.com/code
 
 Model Data
 
+![image](https://user-images.githubusercontent.com/47923906/190261967-47f5a1c7-391c-4ef8-bb02-f832002dbddd.png)
+
+
 
