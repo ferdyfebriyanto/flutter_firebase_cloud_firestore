@@ -92,6 +92,14 @@ memodifikasi di widget HomePage
 
 ![Tampilan konsol](./images/07.png)
 
+### Sinkronisasi Pesan
+
+![Sinkronisasi Pesan](./images/08.png)
+
+* Pesan yang dibuat sebelumnya di database ditampilkan di aplikasi.
+
+
+
 
 
 
