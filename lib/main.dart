@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart'; //new
 
 import 'package:firebase_auth/firebase_auth.dart'; //new
@@ -82,7 +84,6 @@ class HomePage extends StatelessWidget {
           const Paragraph(
             'Join us for a day full of Firebase Workshops and Pizza!',
           ),
-          // Modify from here
           Consumer<ApplicationState>(
             builder: (context, appState, _) => Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -92,12 +93,12 @@ class HomePage extends StatelessWidget {
                   GuestBook(
                     addMessage: (message) =>
                         appState.addMessageToGuestBook(message),
+                    messages: appState.guestBookMessages, // new
                   ),
                 ],
               ],
             ),
           ),
-          // To here.
         ],
       ),
     );
@@ -117,8 +118,30 @@ class ApplicationState extends ChangeNotifier {
     FirebaseAuth.instance.userChanges().listen((user) {
       if (user != null) {
         _loginState = ApplicationLoginState.loggedIn;
+        // Add from here
+        _guestBookSubscription = FirebaseFirestore.instance
+            .collection('guestbook')
+            .orderBy('timestamp', descending: true)
+            .snapshots()
+            .listen((snapshot) {
+          _guestBookMessages = [];
+          for (final document in snapshot.docs) {
+            _guestBookMessages.add(
+              GuestBookMessage(
+                name: document.data()['name'] as String,
+                message: document.data()['text'] as String,
+              ),
+            );
+          }
+          notifyListeners();
+        });
+        // to here.
       } else {
         _loginState = ApplicationLoginState.loggedOut;
+        // Add from here
+        _guestBookMessages = [];
+        _guestBookSubscription?.cancel();
+        // to here.
       }
       notifyListeners();
     });
@@ -129,6 +152,12 @@ class ApplicationState extends ChangeNotifier {
 
   String? _email;
   String? get email => _email;
+
+  // Add from here
+  StreamSubscription<QuerySnapshot>? _guestBookSubscription;
+  List<GuestBookMessage> _guestBookMessages = [];
+  List<GuestBookMessage> get guestBookMessages => _guestBookMessages;
+  // to here.
 
   void startLoginFlow() {
     _loginState = ApplicationLoginState.emailAddress;
