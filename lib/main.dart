@@ -1,11 +1,14 @@
-import 'package:firebase_auth/firebase_auth.dart'; // new
-import 'package:firebase_core/firebase_core.dart'; // new
+import 'package:cloud_firestore/cloud_firestore.dart'; //new
+
+import 'package:firebase_auth/firebase_auth.dart'; //new
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart'; // new
+import 'package:gtk_flutter/ui_guest_book.dart';
+import 'package:provider/provider.dart';
 
-import 'firebase_options.dart'; // new
-import 'src/authentication.dart'; // new
+import 'firebase_options.dart';
+import 'src/authentication.dart';
 import 'src/widgets.dart';
 
 void main() {
@@ -81,6 +84,9 @@ class HomePage extends StatelessWidget {
           const Paragraph(
             'Join us for a day full of Firebase Workshops and Pizza!',
           ),
+          // Add the following two lines.
+          const Header('Discussion'),
+          GuestBook(addMessage: (message) => print(message)),
         ],
       ),
     );
@@ -174,4 +180,24 @@ class ApplicationState extends ChangeNotifier {
   void signOut() {
     FirebaseAuth.instance.signOut();
   }
+
+  // Current content of ApplicationState elided ...
+
+  // Add from here
+  Future<DocumentReference> addMessageToGuestBook(String message) {
+    if (_loginState != ApplicationLoginState.loggedIn) {
+      throw Exception('Must be logged in');
+    }
+
+    return FirebaseFirestore.instance
+        .collection('guestbook')
+        .add(<String, dynamic>{
+      'text': message,
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
+      'name': FirebaseAuth.instance.currentUser!.displayName,
+      'userId': FirebaseAuth.instance.currentUser!.uid,
+    });
+  }
+  // To here
+
 }
