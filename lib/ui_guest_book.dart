@@ -9,6 +9,8 @@ class GuestBookMessage {
   final String message;
 }
 
+enum Attending { yes, no, unknown }
+
 class GuestBook extends StatefulWidget {
   // Modify the following line
   const GuestBook({required this.addMessage, required this.messages});

@@ -7,6 +7,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:gtk_flutter/ui_guest_book.dart';
+import 'package:gtk_flutter/ui_yes_no_selection.dart';
 import 'package:provider/provider.dart';
 
 import 'firebase_options.dart';
@@ -88,12 +89,26 @@ class HomePage extends StatelessWidget {
             builder: (context, appState, _) => Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Add from here
+                if (appState.attendees >= 2)
+                  Paragraph('${appState.attendees} people going')
+                else if (appState.attendees == 1)
+                  const Paragraph('1 person going')
+                else
+                  const Paragraph('No one going'),
+                // To here.
                 if (appState.loginState == ApplicationLoginState.loggedIn) ...[
+                  // Add from here
+                  YesNoSelection(
+                    state: appState.attending,
+                    onSelection: (attending) => appState.attending = attending,
+                  ),
+                  // To here.
                   const Header('Discussion'),
                   GuestBook(
-                    addMessage: (message) =>
+                    addMessage: (String message) =>
                         appState.addMessageToGuestBook(message),
-                    messages: appState.guestBookMessages, // new
+                    messages: appState.guestBookMessages,
                   ),
                 ],
               ],
@@ -115,10 +130,20 @@ class ApplicationState extends ChangeNotifier {
       options: DefaultFirebaseOptions.currentPlatform,
     );
 
+    // Add from here
+    FirebaseFirestore.instance
+        .collection('attendees')
+        .where('attending', isEqualTo: true)
+        .snapshots()
+        .listen((snapshot) {
+      _attendees = snapshot.docs.length;
+      notifyListeners();
+    });
+    // To here
+
     FirebaseAuth.instance.userChanges().listen((user) {
       if (user != null) {
         _loginState = ApplicationLoginState.loggedIn;
-        // Add from here
         _guestBookSubscription = FirebaseFirestore.instance
             .collection('guestbook')
             .orderBy('timestamp', descending: true)
@@ -135,13 +160,29 @@ class ApplicationState extends ChangeNotifier {
           }
           notifyListeners();
         });
-        // to here.
+        // Add from here
+        _attendingSubscription = FirebaseFirestore.instance
+            .collection('attendees')
+            .doc(user.uid)
+            .snapshots()
+            .listen((snapshot) {
+          if (snapshot.data() != null) {
+            if (snapshot.data()!['attending'] as bool) {
+              _attending = Attending.yes;
+            } else {
+              _attending = Attending.no;
+            }
+          } else {
+            _attending = Attending.unknown;
+          }
+          notifyListeners();
+        });
+        // to here
       } else {
         _loginState = ApplicationLoginState.loggedOut;
-        // Add from here
         _guestBookMessages = [];
         _guestBookSubscription?.cancel();
-        // to here.
+        _attendingSubscription?.cancel(); // new
       }
       notifyListeners();
     });
@@ -153,11 +194,27 @@ class ApplicationState extends ChangeNotifier {
   String? _email;
   String? get email => _email;
 
-  // Add from here
   StreamSubscription<QuerySnapshot>? _guestBookSubscription;
   List<GuestBookMessage> _guestBookMessages = [];
   List<GuestBookMessage> get guestBookMessages => _guestBookMessages;
-  // to here.
+
+  int _attendees = 0;
+  int get attendees => _attendees;
+
+// Menambahkan status peserta
+  Attending _attending = Attending.unknown;
+  StreamSubscription<DocumentSnapshot>? _attendingSubscription;
+  Attending get attending => _attending;
+  set attending(Attending attending) {
+    final userDoc = FirebaseFirestore.instance
+        .collection('attendees')
+        .doc(FirebaseAuth.instance.currentUser!.uid);
+    if (attending == Attending.yes) {
+      userDoc.set(<String, dynamic>{'attending': true});
+    } else {
+      userDoc.set(<String, dynamic>{'attending': false});
+    }
+  }
 
   void startLoginFlow() {
     _loginState = ApplicationLoginState.emailAddress;
