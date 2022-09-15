@@ -102,6 +102,34 @@ memodifikasi di widget HomePage
 
 ![Keamanan Dasar](./images/09.png)
 
+## Catat status RSVP peserta
+
+![Catat status RSVP peserta](./images/10.png)
+
+Update Rules Cloud Firestore
+
+```bash
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /guestbook/{entry} {
+      allow read: if request.auth.uid != null;
+      allow write:
+      if request.auth.uid == request.resource.data.userId
+          && "name" in request.resource.data
+          && "text" in request.resource.data
+          && "timestamp" in request.resource.data;
+    }
+    match /attendees/{userId} {
+      allow read: if true;
+      allow write: if request.auth.uid == userId
+          && "attending" in request.resource.data;
+    }
+  }
+}
+
+```
+
 
 
 
