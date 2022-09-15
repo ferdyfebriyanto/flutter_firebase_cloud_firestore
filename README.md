@@ -98,6 +98,10 @@ memodifikasi di widget HomePage
 
 * Pesan yang dibuat sebelumnya di database ditampilkan di aplikasi.
 
+## Menambahkan Aturan Keamanan Dasar
+
+![Keamanan Dasar](./images/09.png)
+
 
 
 
