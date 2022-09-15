@@ -48,7 +48,57 @@ Berikut ini adalah link untuk praktikum: [link](https://firebase.google.com/code
 
 ![Menambahkan form pesan](./images/06.png)
 
-* Telah tampil form untuk menambahkan pesan.
+* Pengguna yang mengeklik tombol KIRIM akan memicu cuplikan kode di bawah ini. Itu menambahkan isi bidang input pesan ke koleksi guestbook dari database. Secara khusus, metode addMessageToGuestBook menambahkan konten pesan ke dokumen baru (dengan ID yang dibuat secara otomatis) ke koleksi guestbook.
+
+```dart
+  Future<DocumentReference> addMessageToGuestBook(String message) {
+    if (_loginState != ApplicationLoginState.loggedIn) {
+      throw Exception('Must be logged in');
+    }
+
+    return FirebaseFirestore.instance
+        .collection('guestbook')
+        .add(<String, dynamic>{
+      'text': message,
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
+      'name': FirebaseAuth.instance.currentUser!.displayName,
+      'userId': FirebaseAuth.instance.currentUser!.uid,
+    });
+  }
+```
+
+### Menghubungkan UI ke database
+
+memodifikasi di widget HomePage
+
+```dart
+     Consumer<ApplicationState>(
+            builder: (context, appState, _) => Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (appState.loginState == ApplicationLoginState.loggedIn) ...[
+                  const Header('Discussion'),
+                  GuestBook(
+                    addMessage: (message) =>
+                        appState.addMessageToGuestBook(message),
+                  ),
+                ],
+              ],
+            ),
+          ),
+````
+
+### Konsol Firebase
+
+![Tampilan konsol](./images/07.png)
+
+
+
+
+
+
+
+
 
 
 
